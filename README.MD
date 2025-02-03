@@ -106,6 +106,10 @@ Aplikasi ini memerlukan 4 tabel utama:
 
 #### 1. Register User
 
+```http
+POST /users/register
+```
+
 Request Body:
 
 ```json
@@ -593,3 +597,168 @@ Note: Endpoint ini perlu melewati proses autentikasi dan autorisasi terlebih dah
 - Seluruh response status, maupun response data nya harus diikuti dengan betul.
 - Mohon untuk diperhatikan notes-notes yang telah diberikan diatas seperti endpoint-endpoint yang harus melewati proses autentikasi dan yang tidak. Begitu juga dengan proses autorisasinya.
 - Perlu diingat disini bahwa proses autorisasi dilakukan setelah proses autentikasi, bukan sebaliknya.
+
+## Struktur Aplikasi
+
+```
+├── cmd
+│   └── main.go                 # Entry point aplikasi
+├── config
+│   └── database.go             # Konfigurasi database
+├── controllers                 # Handler untuk setiap request
+│   ├── user_controller.go
+│   ├── photo_controller.go
+│   ├── comment_controller.go
+│   └── socialmedia_controller.go
+├── middlewares                # Middleware untuk auth dan validasi
+│   ├── authentication.go
+│   └── authorization.go
+├── models                     # Definisi struct dan validasi
+│   ├── user.go
+│   ├── photo.go
+│   ├── comment.go
+│   └── socialmedia.go
+├── repositories              # Layer untuk interaksi dengan database
+│   ├── user_repository.go
+│   ├── photo_repository.go
+│   ├── comment_repository.go
+│   └── socialmedia_repository.go
+├── services                  # Business logic
+│   ├── user_service.go
+│   ├── photo_service.go
+│   ├── comment_service.go
+│   └── socialmedia_service.go
+├── routes                    # Definisi routing
+│   └── router.go
+├── helpers                   # Helper functions
+│   ├── jwt.go
+│   ├── bcrypt.go
+│   └── response.go
+├── dto                      # Data Transfer Objects
+│   ├── user_dto.go
+│   ├── photo_dto.go
+│   ├── comment_dto.go
+│   └── socialmedia_dto.go
+├── go.mod
+├── go.sum
+└── README.md
+```
+
+### Penjelasan Struktur:
+
+1. **cmd/**
+
+   - Berisi file main.go sebagai entry point aplikasi
+   - Inisialisasi database, router, dan menjalankan server
+
+2. **config/**
+
+   - Konfigurasi database dan environment variables
+   - Setup koneksi database menggunakan GORM
+
+3. **controllers/**
+
+   - Menangani HTTP requests
+   - Validasi input
+   - Memanggil service layer untuk business logic
+   - Mengembalikan response ke client
+
+4. **middlewares/**
+
+   - authentication.go: Validasi JWT token
+   - authorization.go: Cek kepemilikan resource
+
+5. **models/**
+
+   - Definisi struct untuk entities
+   - Validasi menggunakan struct tags
+   - Relasi antar model
+
+6. **repositories/**
+
+   - Interface dan implementasi untuk akses database
+   - Menggunakan GORM untuk operasi database
+   - Implementasi CRUD operations
+
+7. **services/**
+
+   - Business logic aplikasi
+   - Koordinasi antara repository dan controller
+   - Implementasi validasi bisnis
+
+8. **routes/**
+
+   - Setup router menggunakan Gin
+   - Grouping routes
+   - Penerapan middleware
+
+9. **helpers/**
+
+   - jwt.go: Fungsi untuk generate dan validate JWT
+   - bcrypt.go: Hash dan verify password
+   - response.go: Format response API
+
+10. **dto/**
+    - Struct untuk request/response data
+    - Validasi input
+    - Transform data antara model dan response
+
+### Contoh Implementasi Route:
+
+```go
+// routes/router.go
+func SetupRouter() *gin.Engine {
+    router := gin.Default()
+
+    // User routes
+    userGroup := router.Group("/users")
+    {
+        userGroup.POST("/register", userController.Register)
+        userGroup.POST("/login", userController.Login)
+        userGroup.PUT("/", middleware.Authentication(), userController.Update)
+        userGroup.DELETE("/", middleware.Authentication(), userController.Delete)
+    }
+
+    // Photo routes
+    photoGroup := router.Group("/photos")
+    photoGroup.Use(middleware.Authentication())
+    {
+        photoGroup.POST("/", photoController.Create)
+        photoGroup.GET("/", photoController.GetAll)
+        photoGroup.PUT("/:photoId", middleware.PhotoAuthorization(), photoController.Update)
+        photoGroup.DELETE("/:photoId", middleware.PhotoAuthorization(), photoController.Delete)
+    }
+
+    // Comment routes
+    commentGroup := router.Group("/comments")
+    commentGroup.Use(middleware.Authentication())
+    {
+        commentGroup.POST("/", commentController.Create)
+        commentGroup.GET("/", commentController.GetAll)
+        commentGroup.PUT("/:commentId", middleware.CommentAuthorization(), commentController.Update)
+        commentGroup.DELETE("/:commentId", middleware.CommentAuthorization(), commentController.Delete)
+    }
+
+    // Social Media routes
+    socialMediaGroup := router.Group("/socialmedias")
+    socialMediaGroup.Use(middleware.Authentication())
+    {
+        socialMediaGroup.POST("/", socialMediaController.Create)
+        socialMediaGroup.GET("/", socialMediaController.GetAll)
+        socialMediaGroup.PUT("/:socialMediaId", middleware.SocialMediaAuthorization(), socialMediaController.Update)
+        socialMediaGroup.DELETE("/:socialMediaId", middleware.SocialMediaAuthorization(), socialMediaController.Delete)
+    }
+
+    return router
+}
+```
+
+Struktur ini mengikuti prinsip:
+
+- Separation of Concerns
+- Clean Architecture
+- Dependency Injection
+- Repository Pattern
+- Middleware Pattern
+
+Setiap layer memiliki tanggung jawab yang jelas dan terpisah, memudahkan untuk testing dan maintenance.

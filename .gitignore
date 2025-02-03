@@ -1,0 +1,54 @@
+# Environment files
+.env
+
+# Compiled Object files, Static and Dynamic libs (Shared Objects)
+*.o
+*.a
+*.so
+
+# Folders
+_obj
+_test
+
+# Architecture specific extensions/prefixes
+*.[568vq]
+[568vq].out
+
+# Go specific
+*.exe
+*.exe~
+*.dll
+*.dylib
+*.test
+*.out
+/vendor/
+/bin/
+
+# IDE specific
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Temporary files
+tmp/
+temp/
+
+# Log files
+*.log
+
+# Binary
+mygram
+
+# Air live reload
+.air.toml
+/tmp
+
+# Database files
+*.db
+*.sqlite
+
+# Debug files
+debug
+debug.test 
